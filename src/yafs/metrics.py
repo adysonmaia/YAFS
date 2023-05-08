@@ -12,28 +12,34 @@ class Metrics:
     WATT_UPTIME = "byUptime"
 
 
-    def __init__(self, default_results_path=None):
+    def __init__(self, default_results_path="result"):
         columns_event = ["id","type", "app", "module", "message","DES.src","DES.dst","TOPO.src","TOPO.dst","module.src","service", "time_in","time_out",
                          "time_emit","time_reception"]
         columns_link = ["id","type", "src", "dst", "app", "latency", "message", "ctime", "size","buffer"]
 
-        path = "result"
-        if  default_results_path is not None:
-            path = default_results_path
-
-        self.__filef = open("%s.csv" % path, "w")
-        self.__filel = open("%s_link.csv"%path, "w")
-        self.__ff = csv.writer(self.__filef)
-        self.__ff_link = csv.writer(self.__filel)
-        self.__ff.writerow(columns_event)
-        self.__ff_link.writerow(columns_link)
+        path = default_results_path
+        if path is not None:
+            self.__filef = open("%s.csv" % path, "w")
+            self.__filel = open("%s_link.csv"%path, "w")
+            self.__ff = csv.writer(self.__filef)
+            self.__ff_link = csv.writer(self.__filel)
+            self.__ff.writerow(columns_event)
+            self.__ff_link.writerow(columns_link)
+        else:
+            self.__filef = None
+            self.__filel = None
+            self.__ff = None
+            self.__ff_link = None
 
     def flush(self):
-        self.__filef.flush()
-        self.__filel.flush()
+        if self.__filef is not None:
+            self.__filef.flush()
+        if self.__filel is not None:
+            self.__filel.flush()
 
     def insert(self,value):
-
+        if self.__ff is None:
+            return
         self.__ff.writerow([value["id"],value["type"],
                     value["app"],
                     value["module"],
@@ -51,6 +57,8 @@ class Metrics:
                             ])
 
     def insert_link(self, value):
+        if self.__ff_link is None:
+            return
         self.__ff_link.writerow([value["id"],value["type"],
                     value["src"],
                     value["dst"],
@@ -64,5 +72,7 @@ class Metrics:
                             ])
 
     def close(self):
-        self.__filef.close()
-        self.__filel.close()
+        if self.__filef is not None:
+            self.__filef.close()
+        if self.__filel is not None:
+            self.__filel.close()
